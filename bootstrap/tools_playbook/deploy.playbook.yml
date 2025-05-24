@@ -1,0 +1,7 @@
+---
+- name: Test
+  hosts: all
+  vars_files:
+    - vars/custom.yml
+  roles:
+    - deploy_rke2

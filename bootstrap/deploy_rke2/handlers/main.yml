@@ -1,0 +1,34 @@
+---
+# handlers file for deploy_rke2
+- name: Restart haproxy
+  ansible.builtin.systemd:
+    name: haproxy
+    state: restarted
+
+- name: Restart keepalived
+  ansible.builtin.systemd:
+    name: keepalived
+    state: restarted
+
+- name: Restart rke2 server
+  ansible.builtin.systemd:
+    name: rke2-server.service
+    state: restarted
+
+- name: Enable rke2 server
+  ansible.builtin.systemd:
+    name: rke2-server.service
+    enabled: true
+
+- name: Restart rke2 agent
+  ansible.builtin.systemd:
+    name: rke2-agent.service
+    state: restarted
+
+- name: Enable rke2 agent
+  ansible.builtin.systemd:
+    name: rke2-agent.service
+    enabled: true
+
+- name: Re-read group vars
+  ansible.builtin.meta: flush_handlers

@@ -1,0 +1,37 @@
+frontend rke2-registration
+    bind *:{{ haproxy.registration_port | default(9345) }}
+    mode tcp
+    option tcplog
+    default_backend rke2-registration-backend
+
+frontend rke2-api
+    bind *:{{ haproxy.api_port | default(6443) }}
+    mode tcp
+    option tcplog
+    default_backend rke2-api-backend
+
+backend rke2-registration-backend
+    mode tcp
+    option tcp-check
+    balance {{ haproxy.balance_algorithm | default('roundrobin') }}
+    default-server inter 10s downinter 5s rise 2 fall 2
+    {% for server in rke2_server %}
+    {% if haproxy.use_fqdn | default(true) %}
+    server {{ server.name }}-reg {{ server.fqdn }}:{{ haproxy.registration_port | default(9345) }} check
+    {% else %}
+    server {{ server.name }}-reg {{ server.address }}:{{ haproxy.registration_port | default(9345) }} check
+    {% endif %}
+    {% endfor %}
+
+backend rke2-api-backend
+    mode tcp
+    option tcp-check
+    balance {{ haproxy.balance_algorithm | default('roundrobin') }}
+    default-server inter 10s downinter 5s rise 2 fall 2
+    {% for server in rke2_server %}
+    {% if haproxy.use_fqdn | default(true) %}
+    server {{ server.name }}-api {{ server.fqdn }}:{{ haproxy.api_port | default(6443) }} check
+    {% else %}
+    server {{ server.name }}-api {{ server.address }}:{{ haproxy.api_port | default(6443) }} check
+    {% endif %}
+    {% endfor %}

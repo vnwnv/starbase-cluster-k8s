@@ -1,0 +1,62 @@
+---
+- name: Install RKE2 package from MicroOS repo
+  community.general.zypper:
+    name: "rke2"
+    state: present
+
+- name: Transactional update apply
+  ansible.builtin.import_tasks: transactional_apply.playbook.yml
+
+# Practically, this task not make sense and may change the defualt permission
+# - name: Ensure RKE2 directory exists
+#   ansible.builtin.file:
+#     path: "{{ item }}"
+#     state: directory
+#     owner: root
+#     group: root
+#     mode: "0755"
+#     recurse: true
+#   loop:
+#     - "{{ rke2_common.config_dir }}"
+#     - "{{ rke2_common.data_dir }}"
+
+- name: Import get rke2 token playbook
+  ansible.builtin.import_tasks: rke2_get_token.playbook.yml
+  when:
+    - not_first_rke2_node
+
+- name: Deploy common configuration
+  ansible.builtin.template:
+    src: rke2_config.yml.j2
+    dest: "{{ rke2_common.config_dir }}/config.yaml"
+    owner: root
+    group: root
+    mode: "0600"
+  notify:
+    - "Restart rke2 {{ rke2_role }}"
+    - "Enable rke2 {{ rke2_role }}"
+
+- name: Deploy registry configuration (server only)
+  ansible.builtin.template:
+    src: rke2_registeries.yml.j2
+    dest: "{{ rke2_common.config_dir }}/registries.yaml"
+    owner: root
+    group: root
+    mode: "0600"
+  notify:
+    - "Restart rke2 {{ rke2_role }}"
+  when:
+    - rke2_role == "server"
+    - rke2_config.embedded_registry.enabled | default(false)
+
+- name: Deploy proxy config
+  ansible.builtin.template:
+    src: rke2_proxy.j2
+    dest: "/etc/default/rke2-{{ rke2_role }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - "Restart rke2 {{ rke2_role }}"
+  when:
+    - rke2_proxy.enable_proxy

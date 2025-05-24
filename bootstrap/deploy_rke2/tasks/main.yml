@@ -1,0 +1,88 @@
+---
+# tasks file for deploy_rke2
+- name: Deploy first cluster
+  when:
+    - not add_additional
+  block:
+    - name: Import lb playbook (Master)
+      ansible.builtin.import_tasks: loadbalancer.playbook.yml
+      when:
+        - inventory_hostname in groups.loadbalancer_master
+      tags: loadbalancer_master
+      vars:
+        keepalived_state: "MASTER"
+
+    - name: Import lb playbook (BACKUP)
+      ansible.builtin.import_tasks: loadbalancer.playbook.yml
+      when:
+        - inventory_hostname in groups.loadbalancer_backup
+      tags: loadbalancer_backup
+      vars:
+        keepalived_state: "BACKUP"
+
+    - name: Import rke2 server playbook (first node only)
+      ansible.builtin.import_tasks: rke2_first.playbook.yml
+      when:
+        - inventory_hostname == groups.rke2_server[0]
+        - inventory_hostname in groups.rke2_server
+      tags: rke2_fisrt
+      vars:
+        rke2_role: "server"
+        not_first_rke2_node: false
+
+    - name: Import rke2 other server nodes playbook
+      ansible.builtin.import_tasks: rke2_remain.playbook.yml
+      when:
+        - inventory_hostname != groups.rke2_server[0]
+        - inventory_hostname in groups.rke2_server
+      tags: rke2_remain
+      vars:
+        rke2_role: "server"
+        not_first_rke2_node: true
+
+    - name: Import rke2 agent nodes playbook
+      ansible.builtin.import_tasks: rke2_remain.playbook.yml
+      when:
+        - inventory_hostname in groups.rke2_agent
+      tags: rke2_agent
+      vars:
+        rke2_role: "agent"
+        not_first_rke2_node: true
+
+- name: Add additional server
+  when:
+    - add_additional
+  block:
+    - name: Import lb playbook (Master) for update config
+      ansible.builtin.import_tasks: loadbalancer.playbook.yml
+      when:
+        - inventory_hostname in groups.loadbalancer_master
+      tags: update_loadbalancer_master
+      vars:
+        keepalived_state: "MASTER"
+
+    - name: Import lb playbook (BACKUP)
+      ansible.builtin.import_tasks: loadbalancer.playbook.yml
+      when:
+        - inventory_hostname in groups.all_loadbalancer_backup
+      tags: add_loadbalancer_backup
+      vars:
+        keepalived_state: "BACKUP"
+
+    - name: Import rke2 other server nodes playbook
+      ansible.builtin.import_tasks: rke2_remain.playbook.yml
+      when:
+        - inventory_hostname in groups.additional_rke2_server
+      tags: add_rke2_server
+      vars:
+        rke2_role: "server"
+        not_first_rke2_node: true
+
+    - name: Import rke2 agent nodes playbook
+      ansible.builtin.import_tasks: rke2_remain.playbook.yml
+      when:
+        - inventory_hostname in groups.additional_rke2_agent
+      tags: add_rke2_agent
+      vars:
+        rke2_role: "agent"
+        not_first_rke2_node: true

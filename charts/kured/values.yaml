@@ -1,0 +1,10 @@
+configuration:
+  timeZone: "UTC"
+  startTime: "18:00"
+  endTime: "23:00"
+  rebootDays: [su, mo, tu, we, th, fr, sa]
+  rebootSentinel: "/var/run/reboot-needed"
+  period: "1h0m0s"
+
+maxUnavailable: 1
+updateStrategy: "RollingUpdate"

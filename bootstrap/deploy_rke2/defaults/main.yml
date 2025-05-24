@@ -1,0 +1,49 @@
+---
+# defaults file for deploy_rke2
+# keepalived settings
+keepalived:
+  priority: "" # Auto generate if null (BACKUP:100) (MASTER and others: 150)
+  virtual_ip: ""
+  virtual_ip_prefix: 24
+  virtual_router_id: 51
+  network_interface: "{{ ansible_default_ipv4.interface }}"
+  unicast_enabled: false
+
+# haproxy settings
+haproxy:
+  api_port: 6443
+  registration_port: 9345
+  balance_algorithm: "roundrobin"
+  auto_generate_server: true # Auto generate server list
+  use_fqdn: true
+
+# Do not need when using auto generate
+# rke2_server:
+#   - name: "control0"
+#     address: "10.10.10.1"
+#   - name: "control1"
+#     address: "10.10.10.2"
+#   - name: "control2"
+#     address: "10.10.10.3"
+
+# RKE2 settings
+rke2_config:
+  tls_san:
+    - ""
+  embedded_registry:
+    enabled: false
+    mirrors:
+      - "docker.io"
+      - "registry.k8s.io"
+  cni: "canal"
+  selinux: true
+  # disable_charts:
+  #   - "rke2-ingress-nginx"
+
+rke2_proxy:
+  enable_proxy: false
+  http_proxy: "http://192.168.1.1:8080"
+  https_proxy: "http://192.168.1.1:8080"
+  no_proxy: "127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+
+add_additional: false

@@ -1,0 +1,91 @@
+#cloud-config
+hostname: ${hostname}
+fqdn: ${hostname}
+users:
+  - name: root
+    lock_passwd: false
+    ssh_authorized_keys:
+      - ${ssh_public_key}
+    hashed_passwd: ${hashed_password}
+package_reboot_if_required: true
+package_update: true
+package_upgrade: true
+packages:
+%{ for pkg in packages ~}
+  - ${pkg}
+%{ endfor ~}
+%{ for pkg in extra_packages != null ? extra_packages : [] ~}
+  - ${pkg}
+%{ endfor ~}
+%{ if change_repo && repo_domain != "" }
+bootcmd:
+  - [ echo, 'Start change repo']
+  - [ cloud-init-per, once, remove-repos, zypper, mr, -da ]
+  - [ cloud-init-per, once, add-oss-repo, zypper, ar, -cfg, '${repo_domain}/tumbleweed/repo/oss/', mirror-oss ]
+  - [ cloud-init-per, once, add-nonoss-repo, zypper, ar, -cfg, '${repo_domain}/tumbleweed/repo/non-oss/', mirror-non-oss ]
+%{ endif }
+write_files:
+  - path: /var/lib/cloud/scripts/per-instance/initialize.sh
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+      mkdir -p /etc/cloud/cloud.cfg.d
+      cat > /etc/cloud/cloud.cfg.d/90_custom_cloud.cfg << "CONFIG"
+      cloud_init_modules:
+        - migrator
+        - bootcmd
+        - write-files
+       # - growpart
+       # - resizefs
+        - disk_setup
+        - mounts
+        - set_hostname passwd
+        - update_hostname
+        - update_etc_hosts
+       # - ca-certs
+        - rsyslog
+        - users-groups
+        - ssh
+
+      # The modules that run in the 'config' stage
+      cloud_config_modules:
+        - locale
+        - set-passwords
+        - timezone
+        - resolv_conf
+        - ntp
+        - zypper_add_repo
+        - disable-ec2-metadata
+        - runcmd
+
+      # The modules that run in the 'final' stage
+      cloud_final_modules:
+        - package-update-upgrade-install
+        - salt-minion
+        - scripts-vendor
+        - scripts-per-once
+        - scripts-per-boot
+        - scripts-per-instance
+        - scripts-user
+        - phone-home
+        - final-message
+        - power-state-change
+      CONFIG
+      chmod 644 /etc/cloud/cloud.cfg.d/90_enable_pkg_update.cfg
+      mkdir -p /etc/NetworkManager/conf.d
+      cat > /etc/NetworkManager/conf.d/rke2-canal.conf << "CONFIG"
+      [keyfile]
+      unmanaged-devices=interface-name:flannel*;interface-name:cali*;interface-name:tunl*;interface-name:vxlan.calico;interface-name:vxlan-v6.calico;interface-name:wireguard.cali;interface-name:wg-v6.cali
+      CONFIG
+      chmod 644 /etc/NetworkManager/conf.d/rke2-canal.conf
+      rebootmgrctl set-window ${reboot_window} ${window_duration}
+      rebootmgrctl set-strategy ${reboot_strategy}
+      %{ if disable_rebootmgr }%
+      systemctl disable rebootmgr
+      %{ endif }%
+      # Self delete
+      rm -f /var/lib/cloud/scripts/per-instance/initialize.sh
+power_state:
+  mode: reboot
+  message: Rebooting to apply cloud-init changes
+  timeout: 30

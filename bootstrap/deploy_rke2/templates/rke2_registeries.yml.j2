@@ -1,0 +1,7 @@
+# Managed by ansible
+# Config file of /etc/rancher/rke2/registries.yaml
+
+mirrors:
+{% for registry in rke2_config.embedded_registry.mirrors if registry | trim %}
+  {{ registry }}:
+{% endfor %}

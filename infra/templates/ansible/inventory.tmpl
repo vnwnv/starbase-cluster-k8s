@@ -1,0 +1,55 @@
+[rke2_server]
+%{ for name, node in vms["controlplane"].nodes ~}
+${node}
+%{ endfor ~}
+
+[rke2_agent]
+%{ if try(vms["worker"], null) != null ~}
+%{ for name, node in vms["worker"].nodes ~}
+${node}
+%{ endfor ~}
+%{ endif ~}
+
+[loadbalancer_master]
+%{ if length(vms["loadbalancer"].nodes) > 0 ~}
+${values(vms["loadbalancer"].nodes)[0]}
+%{ endif ~}
+
+[loadbalancer_backup]
+%{ if length(vms["loadbalancer"].nodes) > 1 ~}
+%{ for name, node in slice(values(vms["loadbalancer"].nodes), 1, length(vms["loadbalancer"].nodes)) ~}
+${node}
+%{ endfor ~}
+%{ endif ~}
+
+[additional_rke2_server]
+
+[additional_rke2_agent]
+
+[additional_loadbalancer_backup]
+
+[all_rke2_server:children]
+rke2_server
+additional_rke2_server
+
+[all_rke2_agent:children]
+rke2_agent
+additional_rke2_agent
+
+[all_rke2:children]
+all_rke2_server
+all_rke2_agent
+
+[all_loadbalancer_backup:children]
+loadbalancer_backup
+additional_loadbalancer_backup
+
+[all_loadbalancer:children]
+loadbalancer_master
+loadbalancer_backup
+additional_loadbalancer_backup
+
+[all:vars]
+ansible_ssh_user=root
+ansible_ssh_private_key_file=~/.ssh/ansible_rsa
+# ansible_ssh_extra_args='-o StrictHostKeyChecking=no'

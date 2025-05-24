@@ -1,0 +1,3 @@
+---
+- name: Import rke first server playbook
+  ansible.builtin.import_tasks: rke2_common.playbook.yml

@@ -1,0 +1,37 @@
+# RKE2 Keepalived Configuration - Managed by Ansible
+global_defs {
+    enable_script_security
+    script_user root
+}
+
+vrrp_script chk_haproxy {
+    script 'killall -0 haproxy' # faster than pidof
+    interval 2
+    timeout 2
+    fall 2
+    rise 2
+}
+
+vrrp_instance haproxy-vip {
+    interface {{ keepalived.network_interface }}
+    state {{ keepalived_state }}
+    priority {{ keepalived.priority }}
+    virtual_router_id {{ keepalived.virtual_router_id }}
+    {% if keepalived_unicast_peers is defined and keepalived_unicast_peers | length > 0 %}
+
+    unicast_src_ip {{ ansible_default_ipv4.address }}
+    unicast_peer {
+        {% for peer in keepalived_unicast_peers if peer | trim %}
+        {{ peer }}
+        {% endfor %}
+    }
+    {% endif %}
+
+    virtual_ipaddress {
+        {{ keepalived.virtual_ip }}/{{ keepalived.virtual_ip_prefix }}
+    }
+
+    track_script {
+        chk_haproxy
+    }
+}

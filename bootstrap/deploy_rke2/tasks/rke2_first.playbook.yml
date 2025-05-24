@@ -1,0 +1,24 @@
+---
+- name: Import rke2 first server playbook
+  ansible.builtin.import_tasks: rke2_common.playbook.yml
+
+- name: Start rke2 for first node
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure rke2 directory exists
+  ansible.builtin.file:
+    path: "{{ rke2_common.data_dir }}/server"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+    recurse: true
+
+- name: Import get rke2 token playbook
+  ansible.builtin.import_tasks: rke2_get_token.playbook.yml
+
+- name: Fetch kube config
+  ansible.builtin.fetch:
+    src: /etc/rancher/rke2/rke2.yaml
+    dest: /tmp/kubeconfig.yaml
+    flat: true

@@ -1,0 +1,30 @@
+---
+# defaults file for deploy_rke2
+# keepalived settings
+keepalived:
+  priority: "" # Auto generate if null (BACKUP:100) (MASTER and others: 150)
+  virtual_ip: "172.16.21.10"
+  virtual_ip_prefix: 24
+  virtual_router_id: 51
+  network_interface: "{{ ansible_default_ipv4.interface }}"
+  unicast_enabled: false
+
+# haproxy settings
+# haproxy:
+#   api_port: 6443
+#   registration_port: 9345
+#   balance_algorithm: "roundrobin"
+
+# RKE2 settings
+rke2_config:
+  tls_san:
+    - ""
+  embedded_registry:
+    enabled: true
+    mirrors:
+      - "docker.io"
+      - "registry.k8s.io"
+  cni: "canal"
+  selinux: true
+  disable_charts:
+    - "rke2-ingress-nginx"

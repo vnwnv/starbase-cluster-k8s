@@ -1,0 +1,19 @@
+---
+- name: Execute transactional-update apply
+  ansible.builtin.command: transactional-update --quiet --non-interactive --continue --drop-if-no-change apply
+  async: 0
+  poll: 1
+  register: update_result
+  changed_when: true
+
+- name: Wait for system to reboot and reconnect
+  ansible.builtin.wait_for_connection:
+    delay: 10
+    timeout: 300
+  when: update_result is failed
+
+- name: Verify system is up after reboot
+  ansible.builtin.command: hostname
+  register: post_reboot_check
+  changed_when: false
+  when: update_result is failed

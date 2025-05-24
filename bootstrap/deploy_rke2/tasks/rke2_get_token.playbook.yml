@@ -1,0 +1,13 @@
+- name: Retrieve node token from first rke2 server
+  ansible.builtin.slurp:
+    src: "{{ rke2_common.data_dir }}/server/node-token"
+  register: token
+  changed_when: false
+  delegate_to: "{{ groups['rke2_server'][0] }}"
+  throttle: 1
+
+- name: Set node token fact
+  ansible.builtin.set_fact:
+    rke2_token: "{{ token.content | b64decode }}"
+  when:
+    - token.content is defined

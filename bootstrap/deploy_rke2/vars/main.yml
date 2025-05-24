@@ -1,0 +1,13 @@
+---
+# vars file for deploy_rke2
+ansible_facts:
+  gather_subset: all
+  gather_network_resources: true
+
+rke2_common:
+  config_dir: "/etc/rancher/rke2"
+  data_dir: "/var/lib/rancher/rke2"
+
+haproxy_ports:
+  - 6443
+  - 9345

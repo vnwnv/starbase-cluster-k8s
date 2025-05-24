@@ -1,0 +1,29 @@
+# Managed by ansible
+# Config file of /etc/rancher/rke2/config.yaml
+
+selinux: {{ rke2_config.selinux | default(true) | to_json }}
+embedded-registry: {{ rke2_config.embedded_registry.enabled | default(false) | to_json }}
+tls-san:
+  - "{{ keepalived.virtual_ip }}"
+{% if rke2_config.tls_san is defined and rke2_config.tls_san %}
+{% for domain in rke2_config.tls_san if domain | trim %}
+  - "{{ domain }}"
+{% endfor %}
+{% endif %}
+{% if rke2_config.node_labels is defined and rke2_config.node_labels %}
+node-label:
+{% for label in rke2_config.node_labels if label | trim %}
+  - "{{ label }}"
+{% endfor %}
+{% endif %}
+{% if rke2_token is defined and rke2_token %}
+server: "https://{{ keepalived.virtual_ip }}:9345"
+token: "{{ rke2_token }}"
+{% endif %}
+{% if rke2_config.disable_charts is defined and rke2_config.disable_charts %}
+disable:
+{% for compose in rke2_config.disable_charts if compose | trim %}
+  - "{{ compose }}"
+{% endfor %}
+{% endif %}
+cni: {{ rke2_config.cni | default("canal") }}

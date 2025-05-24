@@ -1,0 +1,15 @@
+---
+- name: Import ssh hosts
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Debug
+      ansible.builtin.debug:
+        var: ansible_fqdn
+    - name: Import hosts
+      ansible.builtin.known_hosts:
+        name: "{{ ansible_hostname }}"
+        key: "{{ lookup('pipe', 'ssh-keyscan -t rsa {{ inventory_hostname }}') }}"
+        state: present
+        hash_host: true
+      delegate_to: localhost

@@ -1,0 +1,40 @@
+version: 1
+config:
+  %{~ if length(dns_servers) > 0 ~}
+  - type: nameserver
+    address:
+      %{~ for ip in dns_servers ~}
+      - ${ip}
+      %{~ endfor ~}
+  %{~ endif ~}
+
+  %{~ for net_cfg in network_configs ~}
+  - type: physical
+    name: ${net_cfg.interface}
+    %{~ if net_cfg.type == "static" && net_cfg.ip_address != null ~}
+    subnets:
+      - type: static
+        address: ${net_cfg.ip_address}
+        %{~ if net_cfg.cidr_netmask != null ~}
+        netmask: ${net_cfg.cidr_netmask}
+        %{~ endif ~}
+        %{~ if net_cfg.gateway != null ~}
+        gateway: ${net_cfg.gateway}
+        %{~ endif ~}
+        %{~ if net_cfg.dns_search != null ~}
+        dns_search:
+          %{~ for search_path in net_cfg.dns_search ~}
+          - ${search_path}
+          %{~ endfor ~}
+        %{~ endif ~}
+        %{~ if net_cfg.dns_nameserver != null ~}
+        dns_nameservers:
+          %{~ for nameserver in net_cfg.dns_nameserver ~}
+          - ${nameserver}
+          %{~ endfor ~}
+        %{~ endif ~}
+    %{~ else ~}
+    subnets:
+      - type: dhcp
+    %{~ endif ~}
+  %{~ endfor ~}

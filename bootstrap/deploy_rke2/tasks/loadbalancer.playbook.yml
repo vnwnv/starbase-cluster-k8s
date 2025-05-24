@@ -1,0 +1,157 @@
+---
+- name: Auto generate rke2_server list
+  when: haproxy.auto_generate_server
+  block:
+    - name: Auto generate raw rke2_server list
+      ansible.builtin.set_fact:
+        raw_rke2_server: |
+          {% set result = [] %}
+          {% for host in groups['all_rke2_server'] %}
+          {% set node_name = hostvars[host].ansible_hostname %}
+          {% set node_address = (hostvars[host].ansible_default_ipv4.address
+                                if hostvars[host].ansible_default_ipv4 is defined
+                                else hostvars[host].ansible_host|default(host)) %}
+          {% set node_fqdn = hostvars[host].ansible_fqdn %}
+          {{ result.append({'name': node_name, 'address': node_address, 'fqdn': node_fqdn}) or '' }}
+          {% endfor %}
+          {{ result | to_json }}
+
+    - name: Parse JSON to rke2_server
+      ansible.builtin.set_fact:
+        rke2_server: "{{ raw_rke2_server | from_json }}"
+
+- name: Validate required parameters
+  ansible.builtin.assert:
+    that:
+      - keepalived.virtual_ip | length > 0
+      - rke2_server is defined and rke2_server | length > 0
+    fail_msg: "keepalived.virtual_ip and rke2_server must be defined"
+
+- name: Set keepalived priority
+  ansible.builtin.set_fact:
+    keepalived: "{{ dict(keepalived, **{'priority': 100 if keepalived_state == 'BACKUP' else 150}) }}"
+  when: "keepalived.priority | length == 0"
+
+- name: Validate MASTER priority
+  ansible.builtin.assert:
+    that:
+      - "keepalived.priority is defined"
+      - "keepalived.priority | int in range(101, 256)"
+    fail_msg: |
+      "Invalid MASTER priority:
+       - Must be defined
+       - Must be integer between 101-255
+       - Current value: {{ keepalived.priority | default('undefined') }}"
+  when:
+    - "'MASTER' in keepalived_state"
+
+- name: Validate BACKUP priority
+  ansible.builtin.assert:
+    that:
+      - "keepalived.priority is defined"
+      - "keepalived.priority | int in range(0, 101)"
+    fail_msg: |
+      "Invalid BACKUP priority:
+       - Must be defined
+       - Must be integer between 0-100
+       - Current value: {{ keepalived.priority | default('undefined') }}"
+  when:
+    - "'BACKUP' in keepalived_state"
+
+- name: Verify network interface exists
+  ansible.builtin.assert:
+    that: "keepalived.network_interface in ansible_interfaces"
+
+- name: Auto-populate unicast peers
+  ansible.builtin.set_fact:
+    keepalived_unicast_peers: >-
+      {{ (groups.get('loadbalancer', []))
+         | map('extract', hostvars)
+         | selectattr('ansible_' + keepalived.network_interface, 'defined')
+         | map(attribute='ansible_' + keepalived.network_interface)
+         | json_query('
+             [].{v4: ipv4.address}
+             | [][v4]
+           ')
+         | flatten
+         | reject('eq', hostvars[inventory_hostname]['ansible_' + keepalived.network_interface]['ipv4']['address'])
+         | unique
+         | list
+      }}
+  when:
+    - keepalived.unicast_enabled | default(false)
+    - keepalived.unicast_peers is not defined
+
+- name: Add selinux rules
+  ansible.builtin.command: "semanage port -a -t http_port_t -p tcp {{ item }}"
+  register: semanage_result
+  failed_when:
+    - semanage_result.rc not in [0, 1]
+  loop: "{{ haproxy_ports }}"
+  changed_when:
+    - semanage_result.rc == 0
+
+- name: Install HAProxy and Keepalived
+  community.general.zypper:
+    name:
+      - haproxy
+      - keepalived
+    state: present
+
+- name: Transactional update apply
+  ansible.builtin.import_tasks: transactional_apply.playbook.yml
+
+- name: Ensure HAProxy directory exists
+  ansible.builtin.file:
+    path: /etc/haproxy
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+    recurse: true
+
+- name: Configure HAProxy
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart haproxy
+
+- name: Validate HAProxy configuration
+  ansible.builtin.command: haproxy -c -f /etc/haproxy/haproxy.cfg
+  changed_when: false
+
+- name: Ensure Keepalived directory exists
+  ansible.builtin.file:
+    path: /etc/keepalived
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+    recurse: true
+
+- name: Configure Keepalived
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart keepalived
+
+- name: Validate Keepalived configuration
+  ansible.builtin.command: keepalived -t
+  changed_when: false
+
+- name: Ensure services enabled
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+  loop:
+    - haproxy
+    - keepalived
+
+- name: Start haproxy and keepalived
+  ansible.builtin.meta: flush_handlers

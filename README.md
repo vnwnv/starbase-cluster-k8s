@@ -1,7 +1,8 @@
 # Starbase Cluster - Automated RKE2 Deployment on Proxmox VE
 
-[![License](https://img.shields.io/badge/license-LGPLv3-blue?style=flat-square)](https://www.gnu.org/licenses/lgpl-3.0.en.html)
-![version](https://img.shields.io/badge/version-v0.2.0-brightgreen?style=flat-square)
+[![GitHub License](https://img.shields.io/github/license/vnwnv/starbase-cluster-k8s?style=flat-square&color=blue)
+](https://www.gnu.org/licenses/agpl-3.0.en.html)
+[![GitHub Release](https://img.shields.io/github/v/release/vnwnv/starbase-cluster-k8s?include_prereleases&style=flat-square&color=brightgreen)](https://github.com/vnwnv/starbase-cluster-k8s/releases)
 
 Starbase cluster based on:
 
@@ -52,7 +53,7 @@ As a result, deploying the cluster requires **two** primary steps.
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/vnwnv/starbase-cluster
+git clone https://github.com/vnwnv/starbase-cluster-k8s.git
 cd starbase-cluster/infra
 
 # 2. Prepare Terraform configuration

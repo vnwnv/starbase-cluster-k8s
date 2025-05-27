@@ -12,7 +12,7 @@ Starbase cluster based on:
 
 **Easy RKE2 Cluster Deployment** - Automate your Kubernetes infrastructure lifecycle on Proxmox VE with Terraform and Ansible.
 
-You can follow the [*Concepts Guide*](http://localhost:3000/starbase-cluster-website/docs/guides/concepts) to get the main concepts and steps. And follow the [*Quick Start Guide*](http://localhost:3000/starbase-cluster-website/docs/guides/quick-start) to deploy a cluster. Full document site [vnwnv.github.io/starbase-cluster-website](https://vnwnv.github.io/starbase-cluster-website/) is in comming, documents will publish to there.
+You can follow the [*Concepts Guide*](https://vnwnv.github.io/starbase-cluster-website/docs/guides/concepts) to get the main concepts and steps. And follow the [*Quick Start Guide*](https://vnwnv.github.io/starbase-cluster-website/docs/guides/quick-start) to deploy a cluster. Full document site [vnwnv.github.io/starbase-cluster-website](https://vnwnv.github.io/starbase-cluster-website/) is in comming, documents will publish to there.
 
 ## 🎞️ Context
 

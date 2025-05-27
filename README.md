@@ -1,7 +1,6 @@
 # Starbase Cluster - Automated RKE2 Deployment on Proxmox VE
 
-[![GitHub License](https://img.shields.io/github/license/vnwnv/starbase-cluster-k8s?style=flat-square&color=blue)
-](https://www.gnu.org/licenses/agpl-3.0.en.html)
+[![GitHub License](https://img.shields.io/github/license/vnwnv/starbase-cluster-k8s?style=flat-square&color=blue)](https://www.gnu.org/licenses/agpl-3.0.en.html)
 [![GitHub Release](https://img.shields.io/github/v/release/vnwnv/starbase-cluster-k8s?include_prereleases&style=flat-square&color=brightgreen)](https://github.com/vnwnv/starbase-cluster-k8s/releases)
 
 Starbase cluster based on:
@@ -13,7 +12,7 @@ Starbase cluster based on:
 
 **Easy RKE2 Cluster Deployment** - Automate your Kubernetes infrastructure lifecycle on Proxmox VE with Terraform and Ansible.
 
-Full document site [vnwnv.github.io/starbase-cluster-website](https://vnwnv.github.io/starbase-cluster-website/) is in comming, documents will publish to there.
+You can follow the [*Concepts Guide*](http://localhost:3000/starbase-cluster-website/docs/guides/concepts) to get the main concepts and steps. And follow the [*Quick Start Guide*](http://localhost:3000/starbase-cluster-website/docs/guides/quick-start) to deploy a cluster. Full document site [vnwnv.github.io/starbase-cluster-website](https://vnwnv.github.io/starbase-cluster-website/) is in comming, documents will publish to there.
 
 ## 🎞️ Context
 

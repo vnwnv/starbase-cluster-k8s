@@ -1,16 +1,19 @@
 # Starbase Cluster - Automated RKE2 Deployment on Proxmox VE
 
-[![License](https://img.shields.io/badge/license-LGPLv3-blue?style=flat-square)](https://www.gnu.org/licenses/lgpl-3.0.en.html)
-![version](https://img.shields.io/badge/version-v0.2.0-brightgreen?style=flat-square)
+[![GitHub License](https://img.shields.io/github/license/vnwnv/starbase-cluster-k8s?style=flat-square&color=blue)
+](https://www.gnu.org/licenses/agpl-3.0.en.html)
+[![GitHub Release](https://img.shields.io/github/v/release/vnwnv/starbase-cluster-k8s?include_prereleases&style=flat-square&color=brightgreen)](https://github.com/vnwnv/starbase-cluster-k8s/releases)
 
 Starbase cluster based on:
 
 [![Ansible](https://img.shields.io/badge/Ansible-EE0000?style=flat-square&logo=ansible&logoColor=white)](https://ansible.com)
 [![Static Badge](https://img.shields.io/badge/ProxmoxVE-%23E57000?style=flat-square&logo=proxmox&logoColor=white)](https://www.proxmox.com/en/products/proxmox-virtual-environment/overview)
-[![opsnSUSE MicroOS](https://img.shields.io/badge/opsnSUSE%20MicroOS-73BA25?style=flat-square&logo=openSUSE&logoColor=white)](https://ansible.com)
+[![openSUSE MicroOS](https://img.shields.io/badge/opsnSUSE%20MicroOS-73BA25?style=flat-square&logo=openSUSE&logoColor=white)](https://ansible.com)
 [![Terraform](https://img.shields.io/badge/HashiCorp%20Terraform-844FBA?style=flat-square&logo=terraform&logoColor=white)](https://terraform.io)
 
 **Easy RKE2 Cluster Deployment** - Automate your Kubernetes infrastructure lifecycle on Proxmox VE with Terraform and Ansible.
+
+Full document site [vnwnv.github.io/starbase-cluster-website](https://vnwnv.github.io/starbase-cluster-website/) is in comming, documents will publish to there.
 
 ## 🎞️ Context
 
@@ -26,7 +29,7 @@ Starbase cluster based on:
 - **Auto VM Assignment**: Auto assign kubernetes VMs to **all of ProxmoxVE nodes** by poll mechanism
 - **Multi-Role Architecture**: Auto provision control planes, workers, and load balancers with **distinct IP allocation strategies** support
 - **Immutable OS Foundation**: Built on [openSUSE MicroOS](https://microos.opensuse.org/) for automatic **atomic updates** and **automatic transactional rollbacks**
-- **HA RKE2 Controlplane**: Audo deploy HAProxy + Keepalived implementation with virtual IP failover (VRRP) to make a **high availability controlplane**
+- **HA RKE2 Controlplane**: Auto deploy HAProxy + Keepalived implementation with virtual IP failover (VRRP) to make a **high availability controlplane**
 - **Multiple Networking**: Pre-configured Canal CNI with support for Network Policies and can be change to others
 
 ### Operational Excellence
@@ -52,7 +55,7 @@ As a result, deploying the cluster requires **two** primary steps.
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/vnwnv/starbase-cluster
+git clone https://github.com/vnwnv/starbase-cluster-k8s.git
 cd starbase-cluster/infra
 
 # 2. Prepare Terraform configuration
@@ -89,13 +92,13 @@ There is a [full config example tfvar file with comment](./infra/vars/tfvars.exa
 
 ### Ansible (`vars file`)
 
-There is a [minimal ansible value file](./bootstrap/tools_playbook/vars/custom.yml). And also [a document](./bootstrap/deploy_rke2/vars.md) elucidate all of variables.
+There is a [minimal ansible value file](./bootstrap/tools_playbook/vars/custom.yml). And also [a document](./bootstrap/deploy_rke2/vars.md) explains all of variables.
 
 ### Auto Reboot
 
-The openSUSE MicroOS may need reboot after auto upgrade. The loadbalancer node can be auto reboot. Due to deduce accident interruption. The others deployed with auto reboot disabled.
+The openSUSE MicroOS may need reboot after auto upgrade. The loadbalancer node can be auto reboot. To reduce accidental interruption, the others deployed with auto reboot disabled.
 
-You can reboot the node manually. But There is a more gental way to do this by using kured to handle reboot. The ArgoCD file install kured by using helm chart is in the charts folder. You can find helm values in that file. All of the nodes will use UTC time zone, you may need calculate about reboot time window.
+You can reboot the node manually. But There is a more gentle way to do this by using [kured (Kubernetes Reboot Daemon)](https://github.com/kubereboot/kured) to handle reboot. The ArgoCD file install kured by using helm chart is in the charts folder. You can find helm values in that file. All of the nodes will use UTC time zone, you may need calculate about reboot time window.
 
 ## Todo List
 

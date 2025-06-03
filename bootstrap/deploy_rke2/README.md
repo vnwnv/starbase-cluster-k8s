@@ -1,4 +1,4 @@
-deplaoy_rke2
+deploy_rke2
 =========
 
 This Ansible role is designed to deploy RKE2 (Rancher Kubernetes Engine 2) on a cluster of nodes which based on openSUSE MicroOS. It handles the installation and configuration of RKE2, including setting up load balancers, configuring registries, and applying transactional updates.

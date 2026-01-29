@@ -1,7 +1,15 @@
 locals {
+  checksum_filename_match = basename(var.image_download_config.url)
+  checksum_body_raw       = replace(data.http.microos_checksum.response_body, "\r", "")
+  checksum_lines          = split("\n", trimspace(local.checksum_body_raw))
+  # grep
+  checksum_matching_lines = [for line in local.checksum_lines : trimspace(line) if line != "" && strcontains(line, local.checksum_filename_match)]
+  # compatible with single line
+  checksum_line = length(local.checksum_matching_lines) > 0 ? local.checksum_matching_lines[0] : trimspace(local.checksum_body_raw)
+
   checksum = try(
-    split(" ", data.http.microos_checksum.response_body)[0],
-    regex("^[0-9a-f]{64}", data.http.microos_checksum.response_body)
+    regex("^[0-9a-f]+", local.checksum_line),
+    try(split(" ", local.checksum_line)[0], regex("^[0-9a-f]+", data.http.microos_checksum.response_body))
   )
   vm_types = keys(var.vms)
 

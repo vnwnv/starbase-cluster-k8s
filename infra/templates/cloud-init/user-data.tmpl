@@ -17,12 +17,20 @@ packages:
 %{ for pkg in extra_packages != null ? extra_packages : [] ~}
   - ${pkg}
 %{ endfor ~}
-%{ if change_repo && repo_domain != "" }
+%{ if change_repo && repo_domain != "" && (os_family == "suse" || os_family == "debian") }
 bootcmd:
-  - [ echo, 'Start change repo']
+%{ if os_family == "suse" }
+  - [ echo, 'Start change repo (SUSE)']
   - [ cloud-init-per, once, remove-repos, zypper, mr, -da ]
   - [ cloud-init-per, once, add-oss-repo, zypper, ar, -cfg, '${repo_domain}/tumbleweed/repo/oss/', mirror-oss ]
   - [ cloud-init-per, once, add-nonoss-repo, zypper, ar, -cfg, '${repo_domain}/tumbleweed/repo/non-oss/', mirror-non-oss ]
+%{ else }
+  - [ echo, 'Start change repo (Debian)' ]
+  - [ cloud-init-per, once, backup-apt, sh, -c, 'mv /etc/apt/sources.list /etc/apt/sources.list.bak 2>/dev/null || true; rm -rf /etc/apt/sources.list.d.bak 2>/dev/null; mv /etc/apt/sources.list.d /etc/apt/sources.list.d.bak 2>/dev/null || true; mkdir -p /etc/apt/sources.list.d' ]
+  - [ cloud-init-per, once, write-apt-sources-main, sh, -c, "echo 'deb ${repo_domain} ${debian_suite} main contrib non-free non-free-firmware' > /etc/apt/sources.list" ]
+  - [ cloud-init-per, once, write-apt-sources-updates, sh, -c, "echo 'deb ${repo_domain} ${debian_suite}-updates main contrib non-free non-free-firmware' >> /etc/apt/sources.list" ]
+  - [ cloud-init-per, once, write-apt-sources-security, sh, -c, "echo 'deb ${security_repo_domain} ${debian_suite}-security main contrib non-free non-free-firmware' >> /etc/apt/sources.list" ]
+%{ endif }
 %{ endif }
 write_files:
   - path: /var/lib/cloud/scripts/per-instance/initialize.sh
@@ -54,14 +62,18 @@ write_files:
         - timezone
         - resolv_conf
         - ntp
+%{ if os_family == "suse" }
         - zypper_add_repo
+%{ endif }
         - disable-ec2-metadata
         - runcmd
 
       # The modules that run in the 'final' stage
       cloud_final_modules:
         - package-update-upgrade-install
+%{ if os_family == "suse" }
         - salt-minion
+%{ endif }
         - scripts-vendor
         - scripts-per-once
         - scripts-per-boot
@@ -71,18 +83,20 @@ write_files:
         - final-message
         - power-state-change
       CONFIG
-      chmod 644 /etc/cloud/cloud.cfg.d/90_enable_pkg_update.cfg
+      chmod 644 /etc/cloud/cloud.cfg.d/90_custom_cloud.cfg
       mkdir -p /etc/NetworkManager/conf.d
       cat > /etc/NetworkManager/conf.d/rke2-canal.conf << "CONFIG"
       [keyfile]
       unmanaged-devices=interface-name:flannel*;interface-name:cali*;interface-name:tunl*;interface-name:vxlan.calico;interface-name:vxlan-v6.calico;interface-name:wireguard.cali;interface-name:wg-v6.cali
       CONFIG
       chmod 644 /etc/NetworkManager/conf.d/rke2-canal.conf
+%{ if os_family == "suse" }
       rebootmgrctl set-window ${reboot_window} ${window_duration}
       rebootmgrctl set-strategy ${reboot_strategy}
       %{ if disable_rebootmgr }%
       systemctl disable rebootmgr
       %{ endif }%
+%{ endif }
       # Self delete
       rm -f /var/lib/cloud/scripts/per-instance/initialize.sh
 power_state:

@@ -15,10 +15,13 @@ variable "cloud_init_config" {
       })
       change_repo = bool
       repo_domain = string
+      security_repo_domain = optional(string, "")
       disable_rebootmgr = object({
         rke2_nodes = string
         lb_nodes   = string
       })
+      os_family = optional(string, "suse") # "suse" | "debian"
+      debian_suite = optional(string, "trixie")
     })
   })
   default = {
@@ -37,10 +40,13 @@ variable "cloud_init_config" {
       }
       change_repo = false
       repo_domain = "https://mirrors.bfsu.edu.cn/opensuse"
+      security_repo_domain = ""
       disable_rebootmgr = {
         rke2_nodes = true
         lb_nodes   = false
       }
+      os_family    = "suse"
+      debian_suite = "bookworm"
     }
   }
   description = "Cloud-init config-object"

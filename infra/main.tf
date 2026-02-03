@@ -1,8 +1,8 @@
-data "http" "microos_checksum" {
+data "http" "image_checksum" {
   url = var.image_download_config.checksum_url
 }
 
-resource "proxmox_virtual_environment_download_file" "microos_image" {
+resource "proxmox_virtual_environment_download_file" "system_image" {
   for_each           = var.available_nodes
   content_type       = var.image_download_config.content_type
   datastore_id       = var.image_download_config.datastore_id
@@ -31,17 +31,20 @@ resource "proxmox_virtual_environment_file" "controlplane_cloud_config" {
   node_name    = values(var.available_nodes)[index(keys(var.vms.controlplane.nodes), each.key) % length(var.available_nodes)]
   source_raw {
     data = templatefile("${path.module}/templates/cloud-init/user-data.tmpl", {
-      hostname          = each.value
-      ssh_public_key    = var.cloud_init_config.template.ssh_public_key
-      hashed_password   = var.cloud_init_config.template.hashed_password
-      packages          = var.cloud_init_config.template.packages
-      extra_packages    = var.rke2_cloud_init_extra_packages
-      reboot_window     = local.reboot_window[each.key]
-      window_duration   = var.cloud_init_config.template.window_duration
-      reboot_strategy   = var.cloud_init_config.template.reboot_strategy.rke2_nodes
-      disable_rebootmgr = var.cloud_init_config.template.disable_rebootmgr.rke2_nodes
-      change_repo       = var.cloud_init_config.template.change_repo
-      repo_domain       = var.cloud_init_config.template.repo_domain
+      hostname             = each.value
+      ssh_public_key       = var.cloud_init_config.template.ssh_public_key
+      hashed_password      = var.cloud_init_config.template.hashed_password
+      packages             = var.cloud_init_config.template.packages
+      extra_packages       = var.rke2_cloud_init_extra_packages
+      reboot_window        = local.reboot_window[each.key]
+      window_duration      = var.cloud_init_config.template.window_duration
+      reboot_strategy      = var.cloud_init_config.template.reboot_strategy.rke2_nodes
+      disable_rebootmgr    = var.cloud_init_config.template.disable_rebootmgr.rke2_nodes
+      change_repo          = var.cloud_init_config.template.change_repo
+      repo_domain          = var.cloud_init_config.template.repo_domain
+      security_repo_domain = var.cloud_init_config.template.security_repo_domain != "" ? var.cloud_init_config.template.security_repo_domain : var.cloud_init_config.template.repo_domain
+      os_family            = var.cloud_init_config.template.os_family
+      debian_suite         = var.cloud_init_config.template.debian_suite
     })
     file_name = "${each.value}-user-data"
   }
@@ -54,17 +57,20 @@ resource "proxmox_virtual_environment_file" "worker_cloud_config" {
   node_name    = values(var.available_nodes)[index(keys(var.vms.worker.nodes), each.key) % length(var.available_nodes)]
   source_raw {
     data = templatefile("${path.module}/templates/cloud-init/user-data.tmpl", {
-      hostname          = each.value
-      ssh_public_key    = var.cloud_init_config.template.ssh_public_key
-      hashed_password   = var.cloud_init_config.template.hashed_password
-      packages          = var.cloud_init_config.template.packages
-      extra_packages    = var.rke2_cloud_init_extra_packages
-      reboot_window     = local.reboot_window[each.key]
-      window_duration   = var.cloud_init_config.template.window_duration
-      reboot_strategy   = var.cloud_init_config.template.reboot_strategy.rke2_nodes
-      disable_rebootmgr = var.cloud_init_config.template.disable_rebootmgr.rke2_nodes
-      change_repo       = var.cloud_init_config.template.change_repo
-      repo_domain       = var.cloud_init_config.template.repo_domain
+      hostname             = each.value
+      ssh_public_key       = var.cloud_init_config.template.ssh_public_key
+      hashed_password      = var.cloud_init_config.template.hashed_password
+      packages             = var.cloud_init_config.template.packages
+      extra_packages       = var.rke2_cloud_init_extra_packages
+      reboot_window        = local.reboot_window[each.key]
+      window_duration      = var.cloud_init_config.template.window_duration
+      reboot_strategy      = var.cloud_init_config.template.reboot_strategy.rke2_nodes
+      disable_rebootmgr    = var.cloud_init_config.template.disable_rebootmgr.rke2_nodes
+      change_repo          = var.cloud_init_config.template.change_repo
+      repo_domain          = var.cloud_init_config.template.repo_domain
+      security_repo_domain = var.cloud_init_config.template.security_repo_domain != "" ? var.cloud_init_config.template.security_repo_domain : var.cloud_init_config.template.repo_domain
+      os_family            = var.cloud_init_config.template.os_family
+      debian_suite         = var.cloud_init_config.template.debian_suite
     })
     file_name = "${each.value}-user-data"
   }
@@ -77,17 +83,20 @@ resource "proxmox_virtual_environment_file" "loadbalancer_cloud_config" {
   node_name    = values(var.available_nodes)[index(keys(var.vms.loadbalancer.nodes), each.key) % length(var.available_nodes)]
   source_raw {
     data = templatefile("${path.module}/templates/cloud-init/user-data.tmpl", {
-      hostname          = each.value
-      ssh_public_key    = var.cloud_init_config.template.ssh_public_key
-      hashed_password   = var.cloud_init_config.template.hashed_password
-      packages          = var.cloud_init_config.template.packages
-      extra_packages    = var.loadbalancer_cloud_init_extra_packages
-      reboot_window     = local.reboot_window[each.key]
-      window_duration   = var.cloud_init_config.template.window_duration
-      reboot_strategy   = var.cloud_init_config.template.reboot_strategy.lb_nodes
-      disable_rebootmgr = var.cloud_init_config.template.disable_rebootmgr.lb_nodes
-      change_repo       = var.cloud_init_config.template.change_repo
-      repo_domain       = var.cloud_init_config.template.repo_domain
+      hostname             = each.value
+      ssh_public_key       = var.cloud_init_config.template.ssh_public_key
+      hashed_password      = var.cloud_init_config.template.hashed_password
+      packages             = var.cloud_init_config.template.packages
+      extra_packages       = var.loadbalancer_cloud_init_extra_packages
+      reboot_window        = local.reboot_window[each.key]
+      window_duration      = var.cloud_init_config.template.window_duration
+      reboot_strategy      = var.cloud_init_config.template.reboot_strategy.lb_nodes
+      disable_rebootmgr    = var.cloud_init_config.template.disable_rebootmgr.lb_nodes
+      change_repo          = var.cloud_init_config.template.change_repo
+      repo_domain          = var.cloud_init_config.template.repo_domain
+      security_repo_domain = var.cloud_init_config.template.security_repo_domain != "" ? var.cloud_init_config.template.security_repo_domain : var.cloud_init_config.template.repo_domain
+      os_family            = var.cloud_init_config.template.os_family
+      debian_suite         = var.cloud_init_config.template.debian_suite
     })
     file_name = "${each.value}-user-data"
   }
@@ -201,7 +210,7 @@ resource "proxmox_virtual_environment_vm" "controlplane_vm" {
   }
   disk {
     datastore_id = var.controlplane_vm_config.disk_datastore
-    file_id      = proxmox_virtual_environment_download_file.microos_image[keys(var.available_nodes)[index(keys(var.vms.controlplane.nodes), each.key) % length(var.available_nodes)]].id
+    file_id      = proxmox_virtual_environment_download_file.system_image[keys(var.available_nodes)[index(keys(var.vms.controlplane.nodes), each.key) % length(var.available_nodes)]].id
     interface    = "virtio0"
     iothread     = true
     discard      = "on"
@@ -248,7 +257,7 @@ resource "proxmox_virtual_environment_vm" "worker_vm" {
   }
   disk {
     datastore_id = var.worker_vm_config.disk_datastore
-    file_id      = proxmox_virtual_environment_download_file.microos_image[keys(var.available_nodes)[index(keys(var.vms.worker.nodes), each.key) % length(var.available_nodes)]].id
+    file_id      = proxmox_virtual_environment_download_file.system_image[keys(var.available_nodes)[index(keys(var.vms.worker.nodes), each.key) % length(var.available_nodes)]].id
     interface    = "virtio0"
     iothread     = true
     discard      = "on"
@@ -295,7 +304,7 @@ resource "proxmox_virtual_environment_vm" "loadbalancer_vm" {
   }
   disk {
     datastore_id = var.loadbalancer_vm_config.disk_datastore
-    file_id      = proxmox_virtual_environment_download_file.microos_image[keys(var.available_nodes)[index(keys(var.vms.loadbalancer.nodes), each.key) % length(var.available_nodes)]].id
+    file_id      = proxmox_virtual_environment_download_file.system_image[keys(var.available_nodes)[index(keys(var.vms.loadbalancer.nodes), each.key) % length(var.available_nodes)]].id
     interface    = "virtio0"
     iothread     = true
     discard      = "on"

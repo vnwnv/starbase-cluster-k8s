@@ -17,8 +17,11 @@ cloud_init_config = {
       lb_nodes   = "best-effort"
     }
     change_repo = false                                  # Disable default official repo and change it to custom
-    repo_domain = "https://mirrors.bfsu.edu.cn/opensuse" # Repo url
-    disable_rebootmgr = {                                # Whether enable auto reboot
+    repo_domain = "https://mirrors.bfsu.edu.cn/opensuse" # Repo domin SUSE: https://mirrors.bfsu.edu.cn/opensuse，Debian: https://mirrors.bfsu.edu.cn/debian
+    security_repo_domain = ""                            # Debian security repo domain, if empty will use repo_domain. For example: https://mirrors.bfsu.edu.cn/debian-security. For SUSE discard this field
+    os_family    = "suse"                                # System OS family
+    debian_suite = "trixie"                              # Debian suite bookworm、trixie, for Ubuntu use jammy etc. For SUSE discard this field
+    disable_rebootmgr = {                                # Whether enable auto reboot (worked only in openSUSE MicroOS)
       rke2_nodes = true                                  # disable when using krued to handle reboot request
       lb_nodes   = false
     }

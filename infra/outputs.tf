@@ -3,7 +3,7 @@ output "debug_checksum" {
 }
 
 output "debug_http_response" {
-  value = "DEBUG >>> HTTP response body: '${data.http.microos_checksum.response_body}'"
+  value = "DEBUG >>> HTTP response body: '${data.http.image_checksum.response_body}'"
 }
 
 # output "debug_inventory" {
